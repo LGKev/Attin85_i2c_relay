@@ -1,9 +1,9 @@
-// Wire Slave RX
+// TinyWire Slave RX
 // Kevin Kuwata
 // recieves byte from master, and activates relay
-// Created 1/25/2018
+// Created 2/20/2018
 
-#include <Wire.h>
+#include <TinyWire.h>
 #include <String.h>
 
 //#define DEBUG_OUTPUT
@@ -11,7 +11,7 @@
 #define BIT1    0b00000010
 
 
-#define RELAY_PIN   3
+#define RELAY_PIN   4
 #define LED_PIN   13
 
 #define MAX_BYTES_RECEIVED 3 //we only are sending to turn ON, OFF, STATUS
@@ -43,13 +43,15 @@ void requestEvent(void);
 void receiveEvent(void);
 
 void setup() {
-  Wire.begin(SLAVE_ADDRESS);                // join i2c bus with address #8
-  Wire.onReceive(receiveEvent); // register event
-  //Wire.onRequest(requestEvent); // register interrupt requestEvent, when the master asks for STATUS
-  Wire.onRequest(requestEvent);
+  TinyWire.begin(SLAVE_ADDRESS);                // join i2c bus with address #8
+  TinyWire.onReceive(receiveEvent); // register event
+  //TinyWire.onRequest(requestEvent); // register interrupt requestEvent, when the master asks for STATUS
+  TinyWire.onRequest(requestEvent);
 
+  #ifdef ATTINY
   Serial.begin(9600);           // start serial for output
   Serial.println("Slave awake");
+  #endif
 
   //led set up led indirectly hooked up to pin 3 right now.
   // pin 3 high is led on
@@ -60,6 +62,19 @@ void setup() {
   registerMap[1] = 0; //Relay NC 
   registerMap[2] = 0x00; // all cleared
   new_address = SLAVE_ADDRESS;
+  
+  
+  digitalWrite(13, HIGH);
+  digitalWrite(RELAY_PIN, LOW);
+  digitalWrite(13, HIGH);
+  digitalWrite(RELAY_PIN, HIGH);
+  delay(400);
+  digitalWrite(13, HIGH);
+  digitalWrite(RELAY_PIN, LOW);
+  digitalWrite(13, HIGH);
+  digitalWrite(RELAY_PIN, HIGH);
+  delay(400);
+  
 }
 
 void loop() {
@@ -161,7 +176,7 @@ void relayConfig() {
 */
 void update() {
   //write to the memory register. status register?
-  Wire.begin(new_address);
+  TinyWire.begin(new_address);
   registerMap[1] = relay_state;
 }
 
@@ -183,10 +198,10 @@ void receiveEvent(int bytesReceived) {
   for (int i = 0; i < bytesReceived; i++) {
     //loop through the data from the master
     if (i < MAX_BYTES_RECEIVED) {
-      receievedCommands[i] = Wire.read(); //all commands and data are collected in the ISR... do not process here.
+      receievedCommands[i] = TinyWire.read(); //all commands and data are collected in the ISR... do not process here.
     }
     else {
-      Wire.read(); // let them come but don't collect
+      TinyWire.read(); // let them come but don't collect
     }
   }
 }// end of receive ISR
@@ -200,7 +215,10 @@ void receiveEvent(int bytesReceived) {
     @flags:  none
 */
 void requestEvent() {
-  Wire.write(registerMap, REGISTER_MAP_SIZE);
+	
+  //TinyWire.write(registerMap, REGISTER_MAP_SIZE);
+  TinyWire.send(registerMap[0]);
+  TinyWire.send(registerMap[1]);
   //we will send entire map, but we only need to
   // send the status, so bit shift?
 }// end of request ISR
