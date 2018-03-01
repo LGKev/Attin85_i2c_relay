@@ -4,7 +4,6 @@
 // Created 2/20/2018
 
 #include <TinyWire.h>
-#include <String.h>
 
 //#define DEBUG_OUTPUT
 #define BIT0    0b00000001
@@ -12,7 +11,7 @@
 
 
 #define RELAY_PIN   4
-#define LED_PIN   13
+#define LED         0 // on board led for the Attiny programmer
 
 #define MAX_BYTES_RECEIVED 3 //we only are sending to turn ON, OFF, STATUS
 // I think its 3 bytes because, you first send address
@@ -20,7 +19,7 @@
 // then you send the value you want to send.
 
 #define REGISTER_MAP_SIZE   3// ADDRESS, STATUS, ON
-#define SLAVE_ADDRESS   1 //whats a good way to choose?
+#define SLAVE_ADDRESS   0x01//1 //whats a good way to choose?
 
 
 //Address Map for COMMANDS
@@ -43,38 +42,15 @@ void requestEvent(void);
 void receiveEvent(void);
 
 void setup() {
-  TinyWire.begin(SLAVE_ADDRESS);                // join i2c bus with address #8
+
+  TinyWire.begin(0x01);                // join i2c bus with address #1
   TinyWire.onReceive(receiveEvent); // register event
-  //TinyWire.onRequest(requestEvent); // register interrupt requestEvent, when the master asks for STATUS
-  TinyWire.onRequest(requestEvent);
-
-  #ifdef ATTINY
-  Serial.begin(9600);           // start serial for output
-  Serial.println("Slave awake");
-  #endif
-
-  //led set up led indirectly hooked up to pin 3 right now.
-  // pin 3 high is led on
+  TinyWire.onRequest(requestEvent);  
   pinMode(RELAY_PIN, OUTPUT);
-  pinMode(13, OUTPUT);
-  digitalWrite(13, HIGH);
-  digitalWrite(RELAY_PIN, LOW);
+  
   registerMap[1] = 0; //Relay NC 
   registerMap[2] = 0x00; // all cleared
   new_address = SLAVE_ADDRESS;
-  
-  
-  digitalWrite(13, HIGH);
-  digitalWrite(RELAY_PIN, LOW);
-  digitalWrite(13, HIGH);
-  digitalWrite(RELAY_PIN, HIGH);
-  delay(400);
-  digitalWrite(13, HIGH);
-  digitalWrite(RELAY_PIN, LOW);
-  digitalWrite(13, HIGH);
-  digitalWrite(RELAY_PIN, HIGH);
-  delay(400);
-  
 }
 
 void loop() {
@@ -100,13 +76,13 @@ void loop() {
   if (registerMap[1] == 1) {
     //TODO: add the status register update here.
     digitalWrite(RELAY_PIN, HIGH);
-    digitalWrite(LED_PIN, HIGH);
+    digitalWrite(LED, HIGH);
   registerMap[2] |= BIT0;
   }
   if (registerMap[1] == 0) {
     //TODO: add the status register update here
     digitalWrite(RELAY_PIN, LOW);
-    digitalWrite(LED_PIN, LOW);
+    digitalWrite(LED, LOW);
   registerMap[2] &= ~BIT0; //this should make bit0 in the map[2] to be a 0.
   }
 }
@@ -195,7 +171,7 @@ void update() {
     @flags:  none
 */
 void receiveEvent(int bytesReceived) {
-  for (int i = 0; i < bytesReceived; i++) {
+  for (int i = 0; i <= bytesReceived; i++) {
     //loop through the data from the master
     if (i < MAX_BYTES_RECEIVED) {
       receievedCommands[i] = TinyWire.read(); //all commands and data are collected in the ISR... do not process here.
