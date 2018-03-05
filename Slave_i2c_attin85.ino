@@ -3,7 +3,7 @@
 // recieves byte from master, and activates relay
 // Created 2/20/2018
 
-#include <TinyWire.h>
+#include <TinyWire.h> //https://github.com/lucullusTheOnly/TinyWire
 
 //#define DEBUG_OUTPUT
 #define BIT0    0b00000001
@@ -173,11 +173,6 @@ void update() {
 */
 void receiveEvent(int bytesReceived) {
 
-  // digitalWrite(LED, HIGH);
-  //delay(200);
-  // digitalWrite(LED, LOW);
-  //delay(200);
-  //
   //  this is where the bug lies.
   for (int i = 0; i < bytesReceived; i++) {
     //loop through the data from the master
