@@ -172,29 +172,12 @@ void update() {
     @flags:  none
 */
 void receiveEvent(int bytesReceived) {
-
-  //  this is where the bug lies.
-  for (int i = 0; i < bytesReceived; i++) {
-    //loop through the data from the master
-    if (i < MAX_BYTES_RECEIVED) {
-      receivedCommands[i] = TinyWire.read(); //all commands and data are collected in the ISR... do not process here.
-    }
-    else {
-      TinyWire.read(); // let them come but don't collect
+  //bug is in this ISR
+  while(TinyWire.available() > 0){
+    if(TinyWire.read() == 0x01){
+      receivedCommands[1] = TinyWire.read();
     }
   }
-  //case 1: master sets address to read from
-  //case 3: master sets address to write more than one byte of data, conseq addressing
-  //case 2: master sets the address to write a single bye of data.
-
-  if (bytesReceived == 1 && (receivedCommands[0] < REGISTER_MAP_SIZE)) {
-    return;
-  }
-  if (bytesReceived == 1 && (receivedCommands[0] >= REGISTER_MAP_SIZE)) {
-    receivedCommands[0] = 0x00;
-    return;
-  }
-
 
 }// end of receive ISR
 
