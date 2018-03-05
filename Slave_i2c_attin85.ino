@@ -55,6 +55,10 @@ void setup() {
 }
 
 void loop() {
+
+    digitalWrite(RELAY_PIN, receivedCommands[1]);
+
+  
   relayConfig();
   //check the flags ... polling?
   if (update_register == 1) {
