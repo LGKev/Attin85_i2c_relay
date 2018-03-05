@@ -54,6 +54,7 @@ void setup() {
 }
 
 void loop() {
+  digitalWrite(LED, LOW); //only place the led is turned on is in the ONReceive ISR. and turned off here. 
   relayConfig();
   //check the flags ... polling?
   if (update_register == 1) {
@@ -171,6 +172,10 @@ void update() {
     @flags:  none
 */
 void receiveEvent(int bytesReceived) {
+
+  digitalWrite(LED, HIGH);
+
+  
   for (int i = 0; i <= bytesReceived; i++) {
     //loop through the data from the master
     if (i < MAX_BYTES_RECEIVED) {
@@ -193,8 +198,8 @@ void receiveEvent(int bytesReceived) {
 void requestEvent() {
 	
   //TinyWire.write(registerMap, REGISTER_MAP_SIZE);
-  TinyWire.send(registerMap[0]);
-  TinyWire.send(registerMap[1]);
+//  TinyWire.send(registerMap[0]);
+//  TinyWire.send(registerMap[1]);
   //we will send entire map, but we only need to
   // send the status, so bit shift?
 }// end of request ISR
