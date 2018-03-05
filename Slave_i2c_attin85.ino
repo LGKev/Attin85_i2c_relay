@@ -51,10 +51,10 @@ void setup() {
   registerMap[1] = 0; //Relay NC 
   registerMap[2] = 0x00; // all cleared
   new_address = SLAVE_ADDRESS;
+    digitalWrite(LED, LOW); //only place the led is turned on is in the ONReceive ISR. and turned off here. 
 }
 
 void loop() {
-  digitalWrite(LED, LOW); //only place the led is turned on is in the ONReceive ISR. and turned off here. 
   relayConfig();
   //check the flags ... polling?
   if (update_register == 1) {
@@ -173,18 +173,18 @@ void update() {
 */
 void receiveEvent(int bytesReceived) {
 
-  digitalWrite(LED, HIGH);
-
-  
-  for (int i = 0; i <= bytesReceived; i++) {
-    //loop through the data from the master
-    if (i < MAX_BYTES_RECEIVED) {
-      receievedCommands[i] = TinyWire.read(); //all commands and data are collected in the ISR... do not process here.
-    }
-    else {
-      TinyWire.read(); // let them come but don't collect
-    }
-  }
+//  digitalWrite(LED, HIGH);
+//
+//  
+//  for (int i = 0; i <= bytesReceived; i++) {
+//    //loop through the data from the master
+//    if (i < MAX_BYTES_RECEIVED) {
+//      receievedCommands[i] = TinyWire.read(); //all commands and data are collected in the ISR... do not process here.
+//    }
+//    else {
+//      TinyWire.read(); // let them come but don't collect
+//    }
+//  }
 }// end of receive ISR
 
 
