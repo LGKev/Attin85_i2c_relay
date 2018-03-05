@@ -177,12 +177,17 @@ void update() {
 */
 void receiveEvent(int bytesReceived) {
   //bug is in this ISR
-  while(TinyWire.available() > 0){
-    if(TinyWire.read() == 0x01){
+  while(TinyWire.available() > 0){ //this was the solution, 
+    if(TinyWire.read() == 0x01){ //then doing this to capture what value we are actually writing. 
+      //how would this change if we had many registers which we are writing? i guess we
+      // would do a while loop for the data stream.
+      //then do a case statement on what was read, and if its 0x01 its the ON register
+    //  if 0x02 its the address register
+    //  0x0 3 its the status register.
+      //thats when we would need the case 1 2 and 3 to decide if where we are saying to write is valid. 
       receivedCommands[1] = TinyWire.read();
     }
   }
-
 }// end of receive ISR
 
 
