@@ -197,10 +197,10 @@ void receiveEvent(int bytesReceived) {
 */
 void requestEvent() {
 	
-  TinyWire.write(registerMap, REGISTER_MAP_SIZE);
-  TinyWire.send(registerMap[0]);
-  TinyWire.send(registerMap[1]);
-  we will send entire map, but we only need to
-   send the status, so bit shift?
+//  TinyWire.write(registerMap, REGISTER_MAP_SIZE);
+//  TinyWire.send(registerMap[0]);
+//  TinyWire.send(registerMap[1]);
+//  we will send entire map, but we only need to
+//   send the status, so bit shift?
 }// end of request ISR
 
