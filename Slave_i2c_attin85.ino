@@ -173,18 +173,21 @@ void update() {
 */
 void receiveEvent(int bytesReceived) {
 
-//  digitalWrite(LED, HIGH);
+ digitalWrite(LED, HIGH);
+ delay(200);
+ digitalWrite(LED, LOW);
+ delay(200);
 //
-//  
-//  for (int i = 0; i <= bytesReceived; i++) {
-//    //loop through the data from the master
-//    if (i < MAX_BYTES_RECEIVED) {
-//      receievedCommands[i] = TinyWire.read(); //all commands and data are collected in the ISR... do not process here.
-//    }
-//    else {
-//      TinyWire.read(); // let them come but don't collect
-//    }
-//  }
+//  this is where the bug lies. 
+  for (int i = 0; i <= bytesReceived; i++) {
+    //loop through the data from the master
+    if (i < MAX_BYTES_RECEIVED) {
+      receievedCommands[i] = TinyWire.read(); //all commands and data are collected in the ISR... do not process here.
+    }
+    else {
+      TinyWire.read(); // let them come but don't collect
+    }
+  }
 }// end of receive ISR
 
 
