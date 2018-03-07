@@ -48,6 +48,9 @@ void setup() {
   TinyWire.onRequest(requestEvent);
   pinMode(RELAY_PIN, OUTPUT);
 
+
+//need to better define this compared to the receievedCommands array
+//in terms of use and operation.
   registerMap[1] = 0; //Relay NC
   registerMap[2] = 0x00; // all cleared
   new_address = SLAVE_ADDRESS;
@@ -55,41 +58,44 @@ void setup() {
 }
 
 void loop() {
+new_address = recievedCommands[1]; //holds the latest address, from the ISr case statement 
 
-   digitalWrite(RELAY_PIN, receivedCommands[1]);
+//this is absolutely required, right now the relay is not being updated. 
+//you need this line here to update correctly. 
+    digitalWrite(RELAY_PIN, receivedCommands[1]);
 
-//  
-//  relayConfig();
-//  //check the flags ... polling?
-//  if (update_register == 1) {
-//    //update the stuff
-//    update(); // updates the relay state only.
-//    update_register = 0; //reset flag`
-//
-//#ifdef DEBUG_OUTPUT
-//    Serial.print("the address of the slave is:  ");
-//    Serial.println(new_address);
-//
-//    Serial.print("the status register is:  ");
-//    byte statusBitStream = registerMap[2];
-//    Serial.println(statusBitStream, BIN);
-//#endif
-//  }
-//  //check here the state of the relay, in register map
-//  // the following code can probably be a nice function.
-//  // set relay STATE accordingly.
-//  if (registerMap[1] == 1) {
-//    //TODO: add the status register update here.
-//    digitalWrite(RELAY_PIN, HIGH);
-//    digitalWrite(LED, HIGH);
-//    registerMap[2] |= BIT0;
-//  }
-//  if (registerMap[1] == 0) {
-//    //TODO: add the status register update here
-//    digitalWrite(RELAY_PIN, LOW);
-//    digitalWrite(LED, LOW);
-//    registerMap[2] &= ~BIT0; //this should make bit0 in the map[2] to be a 0.
-//  }
+  
+  relayConfig();
+  //check the flags ... polling?
+  if (update_register == 1) {
+    //update the stuff
+    update(); // updates the relay state only.
+    update_register = 0; //reset flag`
+
+#ifdef DEBUG_OUTPUT
+    Serial.print("the address of the slave is:  ");
+    Serial.println(new_address);
+
+    Serial.print("the status register is:  ");
+    byte statusBitStream = registerMap[2];
+    Serial.println(statusBitStream, BIN);
+#endif
+  }
+  //check here the state of the relay, in register map
+  // the following code can probably be a nice function.
+  // set relay STATE accordingly.
+  if (registerMap[1] == 1) {
+    //TODO: add the status register update here.
+    digitalWrite(RELAY_PIN, HIGH);
+    digitalWrite(LED, HIGH);
+    registerMap[2] |= BIT0;
+  }
+  if (registerMap[1] == 0) {
+    //TODO: add the status register update here
+    digitalWrite(RELAY_PIN, LOW);
+    digitalWrite(LED, LOW);
+    registerMap[2] &= ~BIT0; //this should make bit0 in the map[2] to be a 0.
+  }
 }
 
 /*========================================================*/
@@ -176,7 +182,6 @@ void update() {
     @flags:  none
 */
 void receiveEvent(int bytesReceived) {
-  //bug is in this ISR
   while(TinyWire.available() > 0){ //this was the solution, 
     if(TinyWire.read() == 0x01){ //then doing this to capture what value we are actually writing. 
       //how would this change if we had many registers which we are writing? i guess we
@@ -186,6 +191,11 @@ void receiveEvent(int bytesReceived) {
     //  0x0 3 its the status register.
       //thats when we would need the case 1 2 and 3 to decide if where we are saying to write is valid. 
       receivedCommands[1] = TinyWire.read();
+    }
+    else if(TinyWire.read() == 0x03){
+      receivedCommands[1] = TinyWire.read(); //apparently we have 0, 1 ,2 address, on, status registers
+    //  receievedCommands[1]  = //equal to the address we need to set it to
+      //form: slave address, you i'm writing to new address register 0x03, then the value to write 
     }
   }
 }// end of receive ISR
