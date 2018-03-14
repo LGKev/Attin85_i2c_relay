@@ -33,14 +33,7 @@ void setup() {
 	if(current_value == 0xFF){
 	//lets write to eeprom only if not written to before,
 	//brand new chip eeprom is 0xFF
-	
-	for(int i = 0;  i <5; i++){
-	digitalWrite(RELAY_PIN, HIGH);
-	delay(75);
-	digitalWrite(RELAY_PIN, LOW);
-	delay(75);
-	}
-	//EEPROM.write(0, SLAVE_ADDRESS); //default is 0x18.
+	EEPROM.write(0, SLAVE_ADDRESS); //default is 0x18.
 	}
 	else{
 		//been written before, get the value from eeprom and set SLAVE_ADDRESS
@@ -69,12 +62,21 @@ void loop() {
 	}
 	
 	if(ReceivedData[0] == 0x03){
-		ReceivedData[0] = 0xFF; //reset this 
-		//slave address. update SLAVE_ADDRESS
-		SLAVE_ADDRESS = ReceivedData[1];
+		
+		
+		//see if the proposed slave address is valid. 
+		if(ReceivedData[1] > 0x07 && ReceivedData[1] < 0x78){
+			//valid address
+				SLAVE_ADDRESS = ReceivedData[1];
+				EEPROM.write(0, SLAVE_ADDRESS);
+		}
+		else{
+			//invalid address
+			SLAVE_ADDRESS = EEPROM.read(0); //go back to the original value.
+		}
 		TinyWire.begin(SLAVE_ADDRESS);
 		//store in eeprom
-		EEPROM.write(0, SLAVE_ADDRESS);
+		ReceivedData[0] = 0xFF; //reset the buffer
 	}
 	
 	
