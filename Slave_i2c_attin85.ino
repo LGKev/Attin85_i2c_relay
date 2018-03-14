@@ -12,7 +12,8 @@
 
 
 #define REGISTER_MAP_SIZE    3// ADDRESS, STATUS, ON
-#define SLAVE_ADDRESS     0x18
+
+volatile byte SLAVE_ADDRESS  =    0x18;
 
 
 volatile int ReceivedData[32]; //32 byte array to act as a buffer for I2C data. 32 bytes is the max for an UNO 
@@ -40,6 +41,19 @@ void loop() {
 	if(ReceivedData[0] == 0x00){
 		digitalWrite(RELAY_PIN, LOW);
 	}
+	
+	if(ReceivedData[0] == 0x03){
+		for(int i = 0; i<10; i ++){
+			digitalWrite(RELAY_PIN, HIGH);
+			delay(75);
+			digitalWrite(RELAY_PIN, LOW);
+			delay(75);
+		}
+		//slave address. update SLAVE_ADDRESS
+		SLAVE_ADDRESS = ReceivedData[1];
+		TinyWire.begin(SLAVE_ADDRESS);
+	}
+	
 	
 }
 
@@ -77,6 +91,7 @@ void receiveEvent(int bytesReceived) {
     @flags:  none
 */
 void onI2CRequest() {
+	//TODO: add in something to report the address.
 	if(digitalRead(RELAY_PIN) == HIGH) TinyWire.send(0x01);
 	else{
 		TinyWire.send(0x00);
