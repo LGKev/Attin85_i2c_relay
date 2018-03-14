@@ -42,7 +42,6 @@ void setup() {
 
 
   TinyWire.begin(SLAVE_ADDRESS);
-  //TODO: eventually check eeprom, then default    
     pinMode(RELAY_PIN, OUTPUT);
    TinyWire.onReceive(receiveEvent); // register event
     TinyWire.onRequest(onI2CRequest);
@@ -75,10 +74,15 @@ void loop() {
 			SLAVE_ADDRESS = EEPROM.read(0); //go back to the original value.
 		}
 		TinyWire.begin(SLAVE_ADDRESS);
-		//store in eeprom
 		ReceivedData[0] = 0xFF; //reset the buffer
 	}
 	
+		if(ReceivedData[0] == 0xFF){
+			//RESET this is used when master/slave (eeprom address) get out of synced.
+			//update address and update eeprom.
+			SLAVE_ADDRESS = 0x18; //FACTORY DEFAULT
+			EEPROM.write(0, SLAVE_ADDRESS);
+		}
 	
 }
 
