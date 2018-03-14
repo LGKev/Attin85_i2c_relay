@@ -17,33 +17,30 @@
 
 volatile int ReceivedData[32]; //32 byte array to act as a buffer for I2C data. 32 bytes is the max for an UNO 
 
+
 //Control Flags
 volatile bool update_register = false;
 volatile bool relay_state = false; //default off;
 
-
-//ISR prototypes
-void requestEvent(void);
-void receiveEvent(void);
 
 void setup() {
 
   TinyWire.begin(SLAVE_ADDRESS);
   //TODO: eventually check eeprom, then default    
     pinMode(RELAY_PIN, OUTPUT);
-    pinMode(LED, OUTPUT);
-    digitalWrite(LED, LOW); //only place the led is turned on is in the ONReceive ISR. and turned off here.
-    TinyWire.onReceive(receiveEvent); // register event
-    TinyWire.onRequest(requestEvent);
+   TinyWire.onReceive(receiveEvent); // register event
+    TinyWire.onRequest(onI2CRequest);
 }
 
 void loop() {
+	
 	if(ReceivedData[0] == 0x01){
 		digitalWrite(RELAY_PIN, HIGH);
 	}
 	if(ReceivedData[0] == 0x00){
 		digitalWrite(RELAY_PIN, LOW);
 	}
+	
 }
 
 /*========================================================*/
@@ -74,17 +71,14 @@ void receiveEvent(int bytesReceived) {
 
 /*
     @brief: When the master requests data from the slave, this
-      ISR is triggered. Should give the master entire registerMAP.
-    @input: none, *global registerMAP*
+      ISR is triggered. 
+    @input: none, 
     @returns: none
     @flags:  none
 */
-void requestEvent() {
-
-  //  TinyWire.write(registerMap, REGISTER_MAP_SIZE);
-  //  TinyWire.send(registerMap[0]);
-  //  TinyWire.send(registerMap[1]);
-  //  we will send entire map, but we only need to
-  //   send the status, so bit shift?
+void onI2CRequest() {
+	if(digitalRead(RELAY_PIN) == HIGH) TinyWire.send(0x01);
+	else{
+		TinyWire.send(0x00);
+	}
 }// end of request ISR
-
