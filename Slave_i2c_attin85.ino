@@ -4,6 +4,7 @@
 // Created 2/20/2018
 
 #include <TinyWire.h> //https://github.com/lucullusTheOnly/TinyWire
+#include <EEPROM.h>
 
 
 
@@ -25,12 +26,37 @@ volatile bool relay_state = false; //default off;
 
 
 void setup() {
+	
+		byte current_value = EEPROM.read(0);
+
+	
+	if(current_value == 0xFF){
+	//lets write to eeprom only if not written to before,
+	//brand new chip eeprom is 0xFF
+	
+	for(int i = 0;  i <5; i++){
+	digitalWrite(RELAY_PIN, HIGH);
+	delay(75);
+	digitalWrite(RELAY_PIN, LOW);
+	delay(75);
+	}
+	//EEPROM.write(0, SLAVE_ADDRESS); //default is 0x18.
+	}
+	else{
+		//been written before, get the value from eeprom and set SLAVE_ADDRESS
+		SLAVE_ADDRESS = EEPROM.read(0);
+	}
+
 
   TinyWire.begin(SLAVE_ADDRESS);
   //TODO: eventually check eeprom, then default    
     pinMode(RELAY_PIN, OUTPUT);
    TinyWire.onReceive(receiveEvent); // register event
     TinyWire.onRequest(onI2CRequest);
+	
+
+
+
 }
 
 void loop() {
@@ -43,15 +69,12 @@ void loop() {
 	}
 	
 	if(ReceivedData[0] == 0x03){
-		for(int i = 0; i<10; i ++){
-			digitalWrite(RELAY_PIN, HIGH);
-			delay(75);
-			digitalWrite(RELAY_PIN, LOW);
-			delay(75);
-		}
+		ReceivedData[0] = 0xFF; //reset this 
 		//slave address. update SLAVE_ADDRESS
 		SLAVE_ADDRESS = ReceivedData[1];
 		TinyWire.begin(SLAVE_ADDRESS);
+		//store in eeprom
+		EEPROM.write(0, SLAVE_ADDRESS);
 	}
 	
 	
