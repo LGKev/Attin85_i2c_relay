@@ -27,7 +27,8 @@ volatile bool relay_state = false; //default off;
 
 void setup() {
 	
-		byte current_value = EEPROM.read(0);
+	byte current_value = EEPROM.read(0);
+    pinMode(RELAY_PIN, OUTPUT);
 
 	
 	if(current_value == 0xFF){
@@ -40,19 +41,25 @@ void setup() {
 	digitalWrite(RELAY_PIN, LOW);
 	delay(75);
 	}
-	//EEPROM.write(0, SLAVE_ADDRESS); //default is 0x18.
+	EEPROM.write(0, SLAVE_ADDRESS); //default is 0x18.
 	}
 	else{
 		//been written before, get the value from eeprom and set SLAVE_ADDRESS
 		SLAVE_ADDRESS = EEPROM.read(0);
+		//SLAVE_ADDRESS = 0x18;.
+		
+	for(int i = 0;  i <(SLAVE_ADDRESS)%24; i++){
+	digitalWrite(RELAY_PIN, HIGH);
+	delay(1000);
+	digitalWrite(RELAY_PIN, LOW);
+	delay(1000);
+	}
 	}
 
 
   TinyWire.begin(SLAVE_ADDRESS);
-  //TODO: eventually check eeprom, then default    
-    pinMode(RELAY_PIN, OUTPUT);
-   TinyWire.onReceive(receiveEvent); // register event
-    TinyWire.onRequest(onI2CRequest);
+  TinyWire.onReceive(receiveEvent); // register event
+  TinyWire.onRequest(onI2CRequest);
 	
 
 
@@ -67,17 +74,14 @@ void loop() {
 	if(ReceivedData[0] == 0x00){
 		digitalWrite(RELAY_PIN, LOW);
 	}
-	
 	if(ReceivedData[0] == 0x03){
-		ReceivedData[0] = 0xFF; //reset this 
 		//slave address. update SLAVE_ADDRESS
 		SLAVE_ADDRESS = ReceivedData[1];
-		TinyWire.begin(SLAVE_ADDRESS);
+		TinyWire.begin(SLAVE_ADDRESS);		
+				ReceivedData[0] = 0xFF; //reset this 
 		//store in eeprom
 		EEPROM.write(0, SLAVE_ADDRESS);
 	}
-	
-	
 }
 
 /*========================================================*/
