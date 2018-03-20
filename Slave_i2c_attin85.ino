@@ -6,15 +6,12 @@
 #include <TinyWire.h> //https://github.com/lucullusTheOnly/TinyWire
 #include <EEPROM.h>
 
-
-
 #define RELAY_PIN   4
-#define LED         0 // on board led for the Attiny programmer
 
 
 #define REGISTER_MAP_SIZE    3// ADDRESS, STATUS, ON
 
-volatile byte SLAVE_ADDRESS  =    0x18;
+volatile byte SLAVE_ADDRESS  =    0x18; //default
 
 
 volatile int ReceivedData[32]; //32 byte array to act as a buffer for I2C data. 32 bytes is the max for an UNO 
@@ -27,43 +24,20 @@ volatile bool relay_state = false; //default off;
 
 void setup() {
 	
-	byte current_value = EEPROM.read(0);
-    pinMode(RELAY_PIN, OUTPUT);
-
-	
-	if(current_value == 0xFF){
-	//lets write to eeprom only if not written to before,
-	//brand new chip eeprom is 0xFF
-	
-	for(int i = 0;  i <5; i++){
-	digitalWrite(RELAY_PIN, HIGH);
-	delay(75);
-	digitalWrite(RELAY_PIN, LOW);
-	delay(75);
-	}
-	EEPROM.write(0, SLAVE_ADDRESS); //default is 0x18.
+	//Read EEPROM, is it empty (0xFF)? or does it have a value?
+	byte value =  EEPROM.read(1);
+	if(value == 0xFF){
+		//never been written before, USE THE Default address.
+		SLAVE_ADDRESS = 0x18; //default
 	}
 	else{
-		//been written before, get the value from eeprom and set SLAVE_ADDRESS
-		SLAVE_ADDRESS = EEPROM.read(0);
-		//SLAVE_ADDRESS = 0x18;.
-		
-	for(int i = 0;  i <(SLAVE_ADDRESS)%24; i++){
-	digitalWrite(RELAY_PIN, HIGH);
-	delay(1000);
-	digitalWrite(RELAY_PIN, LOW);
-	delay(1000);
-	}
+		SLAVE_ADDRESS = EEPROM.read(1);
 	}
 
-
-  TinyWire.begin(SLAVE_ADDRESS);
-  TinyWire.onReceive(receiveEvent); // register event
-  TinyWire.onRequest(onI2CRequest);
-	
-
-
-
+	TinyWire.begin(SLAVE_ADDRESS);
+    pinMode(RELAY_PIN, OUTPUT);
+	TinyWire.onReceive(receiveEvent); // register event
+    TinyWire.onRequest(onI2CRequest);
 }
 
 void loop() {
@@ -74,14 +48,20 @@ void loop() {
 	if(ReceivedData[0] == 0x00){
 		digitalWrite(RELAY_PIN, LOW);
 	}
+	
 	if(ReceivedData[0] == 0x03){
+
 		//slave address. update SLAVE_ADDRESS
 		SLAVE_ADDRESS = ReceivedData[1];
-		TinyWire.begin(SLAVE_ADDRESS);		
-				ReceivedData[0] = 0xFF; //reset this 
-		//store in eeprom
-		EEPROM.write(0, SLAVE_ADDRESS);
+		//save to eerprom
+		EEPROM.write(1, SLAVE_ADDRESS);
+		TinyWire.begin(SLAVE_ADDRESS);
+		
+		ReceivedData[0]=0x99;
+		ReceivedData[1] = 0x99;
 	}
+	
+	
 }
 
 /*========================================================*/
